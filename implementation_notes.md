@@ -8,3 +8,8 @@
 09/09/2026
 - splitting CIFAR100 in labelled/unlabelled images with Subset
 - building and applying transforms/multiviews (no ColorJitter applied)
+
+10/09/2026
+- merging training datasets and building sampler
+- implementing asserts
+- hardcoding paths and encoder sizes : needs to be rewritten
