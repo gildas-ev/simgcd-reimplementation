@@ -35,24 +35,26 @@ class WrapperCIFAR(torch.utils.data.Dataset):
             x, y = self.train_unlabelled[idx-len(self.train_labelled)]
             return (x, y, False)
 
-def build_transforms():
+def build_transforms(img_size_encoder=224, crop_pct=0.875):
     """Builds transform functions for the train dataset and the test dataset
 
     Returns two callables"""
     mean = [0.485, 0.456, 0.406] # hardcode encoder normalize
     std = [0.229, 0.224, 0.225]
+
+    resize_size = int(img_size_encoder/crop_pct)
     
     train_transform = transforms.Compose([
-        transforms.Resize(256, interpolation=3),
-        transforms.RandomCrop(224),
+        transforms.Resize(resize_size, interpolation=3),
+        transforms.RandomCrop(img_size_encoder),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
 
     test_transform = transforms.Compose([
-        transforms.Resize(256, interpolation=3),
-        transforms.CenterCrop(224),
+        transforms.Resize(resize_size, interpolation=3),
+        transforms.CenterCrop(img_size_encoder),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
@@ -83,14 +85,17 @@ def build_sampler(wrapper_cifar):
 def get_cifar100_datasets(train_transform, test_transform,
                      path_dataset,
                      num_old_classes = 80,
-                     prop_train_labels = 0.5):
+                     prop_train_labels = 0.5,
+                     n_views=2,
+                     download = True,
+                     seed = 0):
     """Load CIFAR100, returns a dict with 4 datasets, respectively
     train_labelled, train_unlabelled, train_unlabelled_eval, test"""
 
-    rng = np.random.default_rng(seed=0)
+    rng = np.random.default_rng(seed=seed)
 
-    data_train_transform = CIFAR100(root=path_dataset, train=True, download=True, transform=MultiViewTransform(train_transform, 2))
-    data_test_transform = CIFAR100(root=path_dataset, train=True, download=True, transform=test_transform)
+    data_train_transform = CIFAR100(root=path_dataset, train=True, download=download, transform=MultiViewTransform(train_transform, n_views))
+    data_test_transform = CIFAR100(root=path_dataset, train=True, download=download, transform=test_transform)
     
     labels_old_classes = list(range(num_old_classes))
     indexes_old_classes = [idx for idx, label in enumerate(data_train_transform.targets) if label in labels_old_classes]    
@@ -100,9 +105,9 @@ def get_cifar100_datasets(train_transform, test_transform,
     indexes_complement = np.setdiff1d(np.arange(len(data_train_transform)), indexes_random_old_classes)
    
     targets = np.array(data_train_transform.targets)
-    assert set(targets[indexes_random_old_classes].tolist()) == set(range(80))
-    assert (targets[indexes_random_old_classes] < 80).sum() == 20000
-    assert (targets[indexes_complement] >= 80).sum() == 10000
+    assert set(targets[indexes_random_old_classes].tolist()) == set(range(num_old_classes))
+    assert (targets[indexes_random_old_classes] < num_old_classes).sum() == 50000*num_old_classes/100*prop_train_labels
+    assert (targets[indexes_complement] >= num_old_classes).sum() == 50000*(100-num_old_classes)/100
 
     train_labelled = Subset(data_train_transform, indexes_random_old_classes)
     train_unlabelled = Subset(data_train_transform, indexes_complement)
@@ -115,42 +120,3 @@ def get_cifar100_datasets(train_transform, test_transform,
         'train_unlabelled_eval':train_unlabelled_eval,
         'test':test
     }
-
-if __name__ == "__main__":
-    ### Exemple de ce qui serait dans le main et quelques tests
-    train_transform, test_transform = build_transforms()
-    result = get_cifar100_datasets(train_transform, test_transform, '~/research/simgcd-reimplementation/datasets')
-   
-    assert len(result['train_labelled']) == 20000
-    assert len(result['train_unlabelled']) == 30000
-    assert len(result['test']) == 10000
-
-
-    wrapper_cifar = WrapperCIFAR(result['train_labelled'], result['train_unlabelled'])
-    sampler = build_sampler(wrapper_cifar)
-    
-    train_dataloader = DataLoader(
-        dataset=wrapper_cifar,
-        batch_size=128,
-        drop_last=True,
-        sampler=sampler
-    )
-
-    eval_dataloader = DataLoader(
-        dataset=result['train_unlabelled_eval'],
-        batch_size=256,
-        drop_last=False
-    )
-
-    batch = next(iter(train_dataloader))
-    images = batch[0]
-    labels = batch[1]
-    mask = batch[2]
-
-    views1 = images[0]
-    views2 = images[1]
-
-    print("Views shapes", views1.shape, views2.shape, views1.dtype)
-    print("Labels shape", labels.shape, labels.dtype)
-    print("Mask shape", mask.shape, mask.dtype)
-    print("pct labelled", torch.sum(batch[2]).item()/128*100)
