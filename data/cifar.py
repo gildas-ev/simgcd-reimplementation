@@ -80,7 +80,7 @@ def build_sampler(wrapper_cifar):
         replacement=True
     )
 
-def get_gcd_datasets(train_transform, test_transform,
+def get_cifar100_datasets(train_transform, test_transform,
                      path_dataset,
                      num_old_classes = 80,
                      prop_train_labels = 0.5):
@@ -119,7 +119,7 @@ def get_gcd_datasets(train_transform, test_transform,
 if __name__ == "__main__":
     ### Exemple de ce qui serait dans le main et quelques tests
     train_transform, test_transform = build_transforms()
-    result = get_gcd_datasets(train_transform, test_transform, '~/research/simgcd-reimplementation/datasets')
+    result = get_cifar100_datasets(train_transform, test_transform, '~/research/simgcd-reimplementation/datasets')
    
     assert len(result['train_labelled']) == 20000
     assert len(result['train_unlabelled']) == 30000
