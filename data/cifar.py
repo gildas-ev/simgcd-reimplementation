@@ -112,7 +112,7 @@ def get_cifar100_datasets(train_transform, test_transform,
     train_labelled = Subset(data_train_transform, indexes_random_old_classes)
     train_unlabelled = Subset(data_train_transform, indexes_complement)
     train_unlabelled_eval = Subset(data_test_transform, indexes_complement)
-    test = CIFAR100(root=path_dataset, train=False, download=True, transform=test_transform)
+    test = CIFAR100(root=path_dataset, train=False, download=download, transform=test_transform)
 
     return {
         'train_labelled':train_labelled,
