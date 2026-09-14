@@ -1,5 +1,8 @@
+import torch
+from torch.utils.data import DataLoader
+
 from config import CONFIG
-from data.cifar import *
+from data.cifar import build_transforms, get_cifar100_datasets, WrapperCIFAR, build_sampler
 
 def test_cifar100():
     train_transform, test_transform = build_transforms(CONFIG.img_size_encoder, CONFIG.crop_pct)
