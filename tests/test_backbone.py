@@ -1,26 +1,34 @@
 from config import CONFIG
-from models.backbone import build_backbone
+from models.backbone import build_backbone, unfreeze_vit_from
 from data.cifar import build_transforms, get_cifar100_datasets
 
 import torch
 from torch.utils.data import DataLoader
 
 def test_encoder_contract():
-    backbone = build_backbone()
+    backbone = build_backbone(CONFIG.encoder_name)
+    backbone.eval()
+
+    x = torch.randn(2, 3, CONFIG.img_size_encoder, CONFIG.img_size_encoder)
+    with torch.no_grad():
+        y = backbone(x)
+    assert y.shape == (2, CONFIG.features_dim)
+    assert y.dtype == torch.float32 and torch.isfinite(y).all()
     
-    train_transform, test_transform = build_transforms(CONFIG.img_size_encoder, CONFIG.crop_pct)
-    result = get_cifar100_datasets(train_transform, test_transform,             CONFIG.path_dataset,                                                    num_old_classes=CONFIG.num_old_classes,                                 prop_train_labels=CONFIG.prop_train_labels,                             n_views=CONFIG.n_views,                                                 download=CONFIG.download,                                               seed=CONFIG.seed)
+    x = torch.randn(4, 3, CONFIG.img_size_encoder, CONFIG.img_size_encoder)
+    with torch.no_grad():
+        y = backbone(x)
+    assert y.shape == (4, CONFIG.features_dim)
+    assert y.dtype == torch.float32 and torch.isfinite(y).all()
+def test_backbone_numel():
+    backbone = build_backbone(CONFIG.encoder_name)
+    unfreeze_vit_from(backbone, 11) # unfreeze only last block for the test
+    nb_params_tot = 0
+    nb_params_trainable = 0
+    for name, param in backbone.named_parameters():
+        nb_params_tot += param.numel()
+        if param.requires_grad:
+            nb_params_trainable += param.numel()
 
-    eval_dataloader = DataLoader(
-        dataset=result['train_unlabelled_eval'],
-        batch_size=CONFIG.batch_size_eval,
-        drop_last=False
-    )
-
-    batch = next(iter(eval_dataloader))
-    images = batch[0]
-
-    features = backbone(images)
-
-    assert features.shape == (CONFIG.batch_size_eval, CONFIG.features_dim)
-    assert features.dtype == torch.float32
+    assert nb_params_tot == 85798656
+    assert nb_params_trainable == 7087872

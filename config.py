@@ -19,7 +19,9 @@ class Config:
     n_views = 2
 
     # encoder
+    encoder_name = ('facebookresearch/dino:main', 'dino_vitb16')
+    unfreeze_from_num = 11
     img_size_encoder = 224
-
+    features_dim = 768
 
 CONFIG = Config()
