@@ -20,6 +20,7 @@ def test_encoder_contract():
         y = backbone(x)
     assert y.shape == (4, CONFIG.features_dim)
     assert y.dtype == torch.float32 and torch.isfinite(y).all()
+
 def test_backbone_numel():
     backbone = build_backbone(CONFIG.encoder_name)
     unfreeze_vit_from(backbone, 11) # unfreeze only last block for the test
