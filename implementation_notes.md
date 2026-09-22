@@ -4,9 +4,9 @@
 | component | state |
 |---|---|
 | `data/cifar.py` | done, validated |
-| `models/backbone.py` | in progress |
-| `models/head.py` | not started |
-| `evaluate.py` | not started |
+| `models/backbone.py` | done, validated |
+| `models/head.py` | done, validated |
+| `evaluate.py` | in progress |
 | `losses/classification.py` | not started |
 | `losses/contrastive.py` | not started |
 | `train.py` | not started |
@@ -64,6 +64,33 @@ output features:
 ViT-B/16 has 12 transformer blocks (0 to 11). The official implementation sets
 `grad_from_block=11`, so only the last block is finetuned.
 
+### 4. Head
+Head contract
+```
+input features:
+     Tensor(B, 768) torch.float32
+
+outputs:
+     Tensor(B, 256) torch.float32, Tensor(B, 100) torch.float32
+```
+The first output corresponds to the features projected through an MLP made of three layers of dimensions 768 -> 2048 -> 2048 -> 256 (with GELU activation in between, no batchnorm as in the original code).
+
+The second output corresponds to the cosine similarities in [-1, 1] between each feature vector and each prototype.
+
+```mermaid
+flowchart LR
+    x["features<br/>(B, 768)<br/>not normalized"]
+
+    x --> mlp["MLP"]
+    mlp --> proj["x_proj (B, 256)<br/>→ contrastive loss"]
+
+    x --> nx["L2 normalize"]
+    P[("prototypes<br/>(100, 768)<br/>nn.Parameter")] --> nP["L2 normalize<br/>in forward"]
+    nx --> lin["matmul"]
+    nP --> lin
+    lin --> logits["logits (B, 100)<br/>cosine ∈ [-1, 1]<br/>→ classification loss"]
+```
+
 ## Comparison with the official implementation
 - I chose a different file structure, which suits me better than the original
   flat layout.
@@ -73,3 +100,5 @@ ViT-B/16 has 12 transformer blocks (0 to 11). The official implementation sets
 - I use two separate CIFAR100 instances wrapped in subsets, instead of the
   `deepcopy` the repo relies on. This avoids sharing a `transform` attribute.
 - I don't return the original dataset index in `__getitem__`. 
+- Instead of reparametrizing the weight matrix of the prototypes, i decided to store the prototypes unnormalized in an `nn.Parameter` of shape `(100, 768)` and to normalize them only during the forward part.
+This gives the exact same cosine similarities while being easier to read for me, and avoid deprecated functions.
