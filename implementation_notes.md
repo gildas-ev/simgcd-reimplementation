@@ -6,7 +6,7 @@
 | `data/cifar.py` | done, validated |
 | `models/backbone.py` | done, validated |
 | `models/head.py` | done, validated |
-| `evaluate.py` | in progress |
+| `evaluate.py` | done, validated |
 | `losses/classification.py` | not started |
 | `losses/contrastive.py` | not started |
 | `train.py` | not started |
@@ -91,6 +91,16 @@ flowchart LR
     lin --> logits["logits (B, 100)<br/>cosine ∈ [-1, 1]<br/>→ classification loss"]
 ```
 
+### 5. Model
+The `Model` class is simply wrapping the provided backbone and head into one `torch.nn.Module subclass`.
+
+### 6. Evaluate
+I provide the function `evaluate(model, loader, num_old, device)` that returns the accuracies of total, old and new classes.
+
+As in the paper, I report the accuracies computed after the last training epoch. The evaluation makes one pass over the whole `train_unlabelled_eval` dataset. 
+
+Note : the total accuracy is weighted by the number of old and new class samples (so 2/3 and 1/3).
+
 ## Comparison with the official implementation
 - I chose a different file structure, which suits me better than the original
   flat layout.
@@ -102,3 +112,4 @@ flowchart LR
 - I don't return the original dataset index in `__getitem__`. 
 - Instead of reparametrizing the weight matrix of the prototypes, i decided to store the prototypes unnormalized in an `nn.Parameter` of shape `(100, 768)` and to normalize them only during the forward part.
 This gives the exact same cosine similarities while being easier to read for me, and avoid deprecated functions.
+- I reimplemented only one way of computing metrics on accuracy (`split_cluster_acc_v2` in the original code, that i renamed `acc_metrics`) as it's the one used for the paper's results.
