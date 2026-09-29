@@ -29,4 +29,12 @@ class Config:
     out_dim: int = 100
     mlp_dims: tuple = (features_dim, 2048, 2048, bottleneck_dim)
 
+    # classification
+    tau_s: float = 0.1
+    tau_t: float = 0.04
+    warmup_tau_t: float = 0.07
+    warmup_epochs: int = 30
+    epsilon: float = 4.0
+    weight_lab: float = 0.35
+
 CONFIG = Config()
