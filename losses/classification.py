@@ -48,4 +48,9 @@ def loss_classification(logits, labels, is_lab,
                          reduction='mean')
     L_cls_u = distill - epsilon*H
 
-    return L_cls_u, L_cls_s, {'entropy':H.detach()}
+    return {
+        'L_cls_u': L_cls_u,
+        'L_cls_s': L_cls_s,
+        'logs': {'cls/entropy': H.detach(),
+                 'cls/distill': distill.detach()}
+    }

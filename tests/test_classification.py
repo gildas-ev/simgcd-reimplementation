@@ -21,23 +21,23 @@ def test_contract():
                                  CONFIG.tau_s, CONFIG.tau_t,
                                  CONFIG.epsilon)
 
+    assert type(result) == dict
     assert len(result) == 3
-    L_cls_u, L_cls_s, logs = result
-    assert type(logs) == dict
-    assert L_cls_s.dtype == torch.float32
-    assert L_cls_s.item() == 0.0
-    assert L_cls_u.dtype == torch.float32
+    assert 'L_cls_u' in result and result['L_cls_u'].dtype == torch.float32
+    assert 'L_cls_s' in result and result['L_cls_s'].dtype == torch.float32
+    assert result['L_cls_s'].item() == 0.0
+    assert 'logs' in result and type(result['logs']) == dict
 
 def test_entropy():
     logits = torch.ones(2*CONFIG.batch_size_train, 100)
     labels = torch.zeros(CONFIG.batch_size_train, dtype=torch.int64)
     is_lab = torch.rand(CONFIG.batch_size_train) > 0.5
     
-    L_cls_u, L_cls_s, logs = loss_classification(logits, labels, is_lab,
-                                 CONFIG.tau_s, CONFIG.tau_t,
-                                 CONFIG.epsilon)
+    cls = loss_classification(logits, labels, is_lab,
+                              CONFIG.tau_s, CONFIG.tau_t,
+                              CONFIG.epsilon)
 
-    assert np.isclose(logs['entropy'].item(), math.log(100))
+    assert np.isclose(cls['logs']['cls/entropy'].item(), math.log(100))
 
 def test_inv():
     view_1 = torch.randn(CONFIG.batch_size_train, 100)
@@ -49,15 +49,15 @@ def test_inv():
     labels = torch.randint(0, 100, (CONFIG.batch_size_train,))
     is_lab = torch.rand(CONFIG.batch_size_train) > 0.5
 
-    L_cls_u, L_cls_s, _ = loss_classification(logits, labels, is_lab,
-                                              CONFIG.tau_s, CONFIG.tau_t,
-                                              CONFIG.epsilon)
-    L_cls_u_bis, L_cls_s_bis, _ = loss_classification(logits_bis, labels, is_lab,
-                                                   CONFIG.tau_s, CONFIG.tau_t,
-                                                   CONFIG.epsilon)
+    cls = loss_classification(logits, labels, is_lab,
+                              CONFIG.tau_s, CONFIG.tau_t,
+                              CONFIG.epsilon)
+    cls_bis = loss_classification(logits_bis, labels, is_lab,
+                                  CONFIG.tau_s, CONFIG.tau_t,
+                                  CONFIG.epsilon)
 
-    assert np.isclose(L_cls_u.item(), L_cls_u_bis.item())
-    assert np.isclose(L_cls_s.item(), L_cls_s_bis.item())
+    assert np.isclose(cls['L_cls_u'].item(), cls_bis['L_cls_u'].item())
+    assert np.isclose(cls['L_cls_s'].item(), cls_bis['L_cls_s'].item())
 
 def test_hardcoded():
     logits = torch.Tensor([[1.0, 0.0], [0.0, 1.0]])
@@ -66,10 +66,8 @@ def test_hardcoded():
 
     tau_s, tau_t = 0.5, 0.25
     epsilon = 1.0
-    L_cls_u, L_cls_s, logs = loss_classification(logits, labels, is_lab,
-                                                 tau_s, tau_t,
-                                                 epsilon)
+    cls = loss_classification(logits, labels, is_lab,
+                              tau_s, tau_t,
+                              epsilon)
 
-    distill = L_cls_u + epsilon*logs['entropy']
-    distill = distill.item()
-    assert np.isclose(distill, 2.09095)
+    assert np.isclose(cls['logs']['cls/distill'].item(), 2.09095)
