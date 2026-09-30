@@ -6,8 +6,9 @@
 | `data/cifar.py` | done, validated |
 | `models/backbone.py` | done, validated |
 | `models/head.py` | done, validated |
+| `models/model.py` | done, validated |
 | `evaluate.py` | done, validated |
-| `losses/classification.py` | not started |
+| `losses/classification.py` | done, validated |
 | `losses/contrastive.py` | not started |
 | `train.py` | not started |
 
@@ -92,11 +93,29 @@ flowchart LR
 ```
 
 ### 5. Model
-The `Model` class is simply wrapping the provided backbone and head into one `torch.nn.Module subclass`.
+The `Model` class is simply wrapping the provided backbone and head into one `torch.nn.Module` subclass.
 
-### 6. Evaluate
-I provide the function `evaluate(model, loader, num_old, device)` that returns the accuracies of total, old and new classes.
+### 6. Loss
+#### 6.1 Classification loss
+I implemented the classification loss described in eq. (4) of the paper.  
+The function `loss_classification` returns the supervised and unsupervised classification loss that are then combined in the training loop.
 
+```
+inputs:
+     Tensor(2B, 100) torch.float32 the raw cosine logits of the head with the
+                                   first B rows corresponding to the first view and the last B rows corresponding to the second view
+     Tensor(B, ) torch.int64 the labels of each image
+     Tensor(B, ) torch.bool if they are labelled
+     tau_s, tau_t, epsilon floats of the configuration file
+
+output:
+     dict with keys 'L_cls_u', 'L_cls_s', 'logs'
+```
+
+Note : the teacher logits are detached so that the student learns to predict the teacher as a fixed target at each step. I detached the logs to prevent from keeping each graph alive and running out of memory.
+
+### 7. Evaluate
+I provide the function `evaluate(model, loader, num_old, device)` that returns the accuracies of total, old and new classes.  
 As in the paper, I report the accuracies computed after the last training epoch. The evaluation makes one pass over the whole `train_unlabelled_eval` dataset. 
 
 Note : the total accuracy is weighted by the number of old and new class samples (so 2/3 and 1/3).
@@ -113,3 +132,6 @@ Note : the total accuracy is weighted by the number of old and new class samples
 - Instead of reparametrizing the weight matrix of the prototypes, i decided to store the prototypes unnormalized in an `nn.Parameter` of shape `(100, 768)` and to normalize them only during the forward part.
 This gives the exact same cosine similarities while being easier to read for me, and avoid deprecated functions.
 - I reimplemented only one way of computing metrics on accuracy (`split_cluster_acc_v2` in the original code, that i renamed `acc_metrics`) as it's the one used for the paper's results.
+- My calculation of the entropy in `losses/classification` differs from the one in the original code by a constant $\log K$ which doesn't affect the gradient descent. I followed my understanding of entropy from physics classes.
+- I used torch.roll instead of a nested loop to compute the unsupervised classification loss for readability.
+- I used the student temperature of the `config.py` file instead of hardcoding it.

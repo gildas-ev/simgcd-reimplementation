@@ -14,12 +14,16 @@ def loss_classification(logits, labels, is_lab,
     logits: Tensor (2B, 100) float32 the cosine logits out of the head
     labels: Tensor (B, ) int64 the labels
     is_lab: Tensor (B, ) bool is labelled
-    tau_s, tau_t: float the temperatures of student and teacher
+    tau_s, tau_t: float the temperatures of student and teacher (for the current epoch)
     epsilon: float weights the entropy regularizer
 
     Returns
-    L_cls_u, L_cls_s: float32
-    logs: {"entropy": float32}
+    {
+        'L_cls_u': torch.float32,
+        'L_cls_s': torch.float32,
+        'logs': {'cls/entropy': torch.float32,
+                 'cls/distill': torch.float32}
+    }
     """
     B = logits.shape[0] // 2
     assert len(labels) == B
@@ -39,8 +43,8 @@ def loss_classification(logits, labels, is_lab,
     target = torch.cat((labels[is_lab], labels[is_lab]))
     L_cls_s = F.cross_entropy(input_lab, target,
                               reduction='mean')
-    if not torch.any(is_lab):
-        L_cls_s = logits.new_zeros(())
+    if not torch.any(is_lab): # in the rare case of 0 labelled sample
+        L_cls_s = logits.new_zeros(()) # we return a zero on the same device to avoid an error
     
     # unsupervised
     rolled_views = torch.roll(teacher_logits, B, 0)
