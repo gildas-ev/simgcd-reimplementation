@@ -27,6 +27,7 @@ def loss_classification(logits, labels, is_lab,
     """
     B = logits.shape[0] // 2
     assert len(labels) == B
+    assert len(is_lab) == B
 
     student_logits = logits
     teacher_logits = logits.detach()
