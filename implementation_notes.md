@@ -9,7 +9,7 @@
 | `models/model.py` | done, validated |
 | `evaluate.py` | done, validated |
 | `losses/classification.py` | done, validated |
-| `losses/contrastive.py` | not started |
+| `losses/contrastive.py` | done, validated |
 | `train.py` | not started |
 
 ## Data flow
@@ -114,6 +114,28 @@ output:
 
 Note : the teacher logits are detached so that the student learns to predict the teacher as a fixed target at each step. I detached the logs to prevent from keeping each graph alive and running out of memory.
 
+#### 6.2 Representation loss
+Similarly, `loss_representation` returns the supervised and unsupervised representation loss.
+```
+inputs:
+     Tensor(2B, 256) torch.float32 the raw projected features of the head with the
+                                   first B rows corresponding to the first view and the last B rows corresponding to the second view
+     Tensor(B, ) torch.int64 the labels of each image
+     Tensor(B, ) torch.bool if they are labelled
+     tau_u, tau_c floats of the configuration file
+
+output:
+     dict with keys 'L_rep_u', 'L_rep_s'
+```
+
+I rewrote the implementation of the representation loss in order to (1) stay closer to the mathematical expression of the loss for understandability (2) avoid using two different functions for supervised and unsupervised loss (3) avoid the generic SupCon code.
+
+The core logic of the contrastive loss is implemented in `contrastive_loss`. The function computes :
+
+$$\mathcal{L} = \frac{1}{N}\sum_{i=1}^{N} -\frac{1}{|P(i)|}\sum_{p \in P(i)} \log \frac{\exp(z_i^\top z_p/\tau)}{\sum_{k \neq i}\exp(z_i^\top z_k/\tau)}, \qquad \|z_i\| = 1$$
+
+The unsupervised and supervised loss simply use different $P(i)$ masks. The unsupervised loss uses the other view of the same image, whereas the supervised loss uses all labelled samples with the same label in both views, excluding itself. 
+
 ### 7. Evaluate
 I provide the function `evaluate(model, loader, num_old, device)` that returns the accuracies of total, old and new classes.  
 As in the paper, I report the accuracies computed after the last training epoch. The evaluation makes one pass over the whole `train_unlabelled_eval` dataset. 
@@ -135,3 +157,5 @@ This gives the exact same cosine similarities while being easier to read for me,
 - My calculation of the entropy in `losses/classification` differs from the one in the original code by a constant $\log K$ which doesn't affect the gradient descent. I followed my understanding of entropy from physics classes.
 - I used torch.roll instead of a nested loop to compute the unsupervised classification loss for readability.
 - I used the student temperature of the `config.py` file instead of hardcoding it.
+- It seems that there is a discrepancy between the paper mentioning $\tau_u = 0.07$, $\tau_c = 1.0$ and the code where the two values are swapped. I followed the code implementation.
+- As described in section 6.2, I modified the logic of the implementation of the representation loss.
