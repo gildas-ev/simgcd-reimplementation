@@ -32,18 +32,18 @@ def acc_metrics(y_pred, y_true, is_old):
     
     return correct_all/nb_all, correct_old/nb_old, correct_new/nb_new
 
-def evaluate(model, loader, num_old, device):
+def evaluate(model, loader, num_old, device, amp_dtype, use_amp):
     """Runs the model with the eval loader and
     returns all, old, new accuracies"""
     try:
         model.eval()
 
         y_pred, y_true = [], []
-        with torch.no_grad():
+        with torch.no_grad(), torch.autocast(device_type=device.type, dtype=amp_dtype, enabled=use_amp):
             for _, batch in enumerate(loader):
                 images, labels = batch
             
-                _, logits = model(images.to(device)) # shape (B, 100)
+                _, logits = model(images.to(device, non_blocking=True)) # shape (B, 100)
                 y_pred.append(logits.argmax(1).cpu().numpy())
                 y_true.append(labels.cpu().numpy())
 

@@ -71,6 +71,6 @@ def test_evaluate():
     head = Head(CONFIG.out_dim, CONFIG.mlp_dims)
     model = Model(backbone, head)
 
-    result = evaluate(model, eval_dataloader, CONFIG.num_old_classes, device)
+    result = evaluate(model, eval_dataloader, CONFIG.num_old_classes, device, None, False)
     assert len(result) == 3
     assert model.training == True

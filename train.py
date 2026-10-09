@@ -107,7 +107,7 @@ def train(model, train_dataloader, eval_dataloader, optimizer, scheduler, scaler
 
         # evaluation
         if epoch % config.eval_freq == 0 or epoch == last_epoch-1:
-            all, old, new = evaluate(model, eval_dataloader, config.num_old_classes, device)
+            all, old, new = evaluate(model, eval_dataloader, config.num_old_classes, device, amp_dtype, use_amp)
             logger.metrics("eval", global_step, {
                 'all':all,
                 'old':old,
