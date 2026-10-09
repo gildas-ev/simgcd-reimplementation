@@ -1,17 +1,5 @@
 # My implementation notes
 
-## Status
-| component | state |
-|---|---|
-| `data/cifar.py` | done, validated |
-| `models/backbone.py` | done, validated |
-| `models/head.py` | done, validated |
-| `models/model.py` | done, validated |
-| `evaluate.py` | done, validated |
-| `losses/classification.py` | done, validated |
-| `losses/contrastive.py` | done, validated |
-| `train.py` | not started |
-
 ## Data flow
 ### 1. CIFAR100 dataset split
 | set | length | contents |
@@ -142,6 +130,27 @@ As in the paper, I report the accuracies computed after the last training epoch.
 
 Note : the total accuracy is weighted by the number of old and new class samples (so 2/3 and 1/3).
 
+### 8. Training
+#### 8.1 Training loop
+- The two views yielded by the dataloader are concatenated on GPU to allow for asynchronous loading of the batch.
+- The `config.py` files allows for an extra argument `stop_after_epochs`, so that the schedulers (learning rate and teacher temperature) are computed with `num_epochs` but the training actually stops earlier for debugging.
+
+### 8.2 Optimizer
+- The weight decay filters on the dimension of parameters to exclude LayerNorm and biases (for which ndim == 1)
+- We also apply regularization to the prototypes to allow their norms to converge (see comparison section) 
+
+### 8.3 Precision
+The numerical precision is automatically chosen among `fp32`, `fp16`, `bf16` for portability.  
+If the precision is set to `fp16` we use `torch.amp.GradScaler` to avoid gradients from being rounded to 0.
+
+### 8.4 Checkpoints and portability
+The checkpoint only saves trainable parameters for efficient disk usage.   
+We also save the rng states to get the same results when resuming training (exact same bit on CPU). 
+The logs also include the commit of the current version and if the folder was modified (`dirty`).
+
+### 8.5 Throughput
+Every `print_freq` iteration I compute `t_data` the time waiting the next batches and `t_compute` the computation time of the GPU. This allows to choose the infrastructure more wisely. I used `torch.cuda.synchronize` since cuda is asynchronous.
+
 ## Comparison with the official implementation
 - I chose a different file structure, which suits me better than the original
   flat layout.
@@ -159,3 +168,5 @@ This gives the exact same cosine similarities while being easier to read for me,
 - I used the student temperature of the `config.py` file instead of hardcoding it.
 - It seems that there is a discrepancy between the paper mentioning $\tau_u = 0.07$, $\tau_c = 1.0$ and the code where the two values are swapped. I followed the code implementation.
 - As described in section 6.2, I modified the logic of the implementation of the representation loss.
+- I used `.to(device)` instead of `.cuda()` to allow for debugging on CPU.
+- I added a `eval_freq` parameter to the configuration, which can save two to three hours of training time.
