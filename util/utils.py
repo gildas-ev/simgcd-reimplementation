@@ -105,7 +105,7 @@ def save_checkpoint(run_dir, model, optimizer, scheduler, scaler, epoch, global_
     os.replace(tmp, run_dir / "ckpt.pt")
 
 def load_checkpoint(run_dir, model, optimizer, scheduler, scaler, device):
-    ckpt = torch.load(run_dir / "ckpt.pt", map_location=device, weights_only=False)
+    ckpt = torch.load(run_dir / "ckpt.pt", map_location="cpu", weights_only=False)
 
     model.load_state_dict(ckpt["model-trainable"], strict=False)
     optimizer.load_state_dict(ckpt["optimizer"])
