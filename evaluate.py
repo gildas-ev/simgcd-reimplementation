@@ -8,7 +8,7 @@ def acc_metrics(y_pred, y_true, is_old):
     y_true: np.array (N,) int64 the ground truth
     is_old: np.array (N,) bool if the ground truth is an old class
 
-    returns the total, old, new accuracies
+    returns the all, old, new accuracies
     
     Note : returns nan if no instances"""
     assert len(y_pred) == len(y_true) and len(y_true) == len(is_old)
@@ -26,15 +26,15 @@ def acc_metrics(y_pred, y_true, is_old):
     y_pred_classes = cluster_to_class[y_pred]
     correct = (y_pred_classes == y_true)
 
-    nb_tot, correct_tot = len(y_pred), sum(correct)
+    nb_all, correct_all = len(y_pred), sum(correct)
     nb_old, correct_old = sum(is_old), sum(correct & is_old)
     nb_new, correct_new = sum(~is_old), sum(correct & ~is_old)
     
-    return correct_tot/nb_tot, correct_old/nb_old, correct_new/nb_new
+    return correct_all/nb_all, correct_old/nb_old, correct_new/nb_new
 
 def evaluate(model, loader, num_old, device):
     """Runs the model with the eval loader and
-    returns total, old, new accuracies"""
+    returns all, old, new accuracies"""
     try:
         model.eval()
 
@@ -51,7 +51,7 @@ def evaluate(model, loader, num_old, device):
         y_true = np.concatenate(y_true)
         is_old = (y_true < num_old)
 
-        tot, old, new = acc_metrics(y_pred, y_true, is_old)
+        all, old, new = acc_metrics(y_pred, y_true, is_old)
     finally:
         model.train()
-    return tot, old, new
+    return all, old, new
