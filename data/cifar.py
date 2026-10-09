@@ -35,6 +35,11 @@ class WrapperCIFAR(torch.utils.data.Dataset):
             x, y = self.train_unlabelled[idx-len(self.train_labelled)]
             return (x, y, False)
 
+def _subsample(indices, n, rng):
+    if n is None or n >= len(indices):
+        return indices
+    return np.sort(rng.choice(indices, size=n, replace=False))
+
 def build_transforms(img_size_encoder=224, crop_pct=0.875):
     """Builds transform functions for the train dataset and the test dataset
 
@@ -82,37 +87,46 @@ def build_sampler(wrapper_cifar):
         replacement=True
     )
 
-def get_cifar100_datasets(train_transform, test_transform,
-                     path_dataset,
-                     num_old_classes = 80,
-                     prop_train_labels = 0.5,
-                     n_views=2,
-                     download = True,
-                     seed = 0):
+def get_cifar100_datasets(train_transform, test_transform, config):
     """Load CIFAR100, returns a dict with 4 datasets, respectively
     train_labelled, train_unlabelled, train_unlabelled_eval, test"""
 
-    rng = np.random.default_rng(seed=seed)
+    rng = np.random.default_rng(seed=config.seed)
 
-    data_train_transform = CIFAR100(root=path_dataset, train=True, download=download, transform=MultiViewTransform(train_transform, n_views))
-    data_test_transform = CIFAR100(root=path_dataset, train=True, download=download, transform=test_transform)
+    data_train_transform = CIFAR100(root=config.path_dataset, train=True, download=config.download, transform=MultiViewTransform(train_transform, config.n_views))
+    data_test_transform = CIFAR100(root=config.path_dataset, train=True, download=config.download, transform=test_transform)
     
-    labels_old_classes = list(range(num_old_classes))
+    labels_old_classes = list(range(config.num_old_classes))
     indexes_old_classes = [idx for idx, label in enumerate(data_train_transform.targets) if label in labels_old_classes]    
     nb_img_old_classes = len(indexes_old_classes)
     
-    indexes_random_old_classes = rng.choice(indexes_old_classes, size=int(prop_train_labels*nb_img_old_classes), replace=False)
+    indexes_random_old_classes = rng.choice(indexes_old_classes, size=int(config.prop_train_labels*nb_img_old_classes), replace=False)
     indexes_complement = np.setdiff1d(np.arange(len(data_train_transform)), indexes_random_old_classes)
    
     targets = np.array(data_train_transform.targets)
-    assert set(targets[indexes_random_old_classes].tolist()) == set(range(num_old_classes))
-    assert (targets[indexes_random_old_classes] < num_old_classes).sum() == 50000*num_old_classes/100*prop_train_labels
-    assert (targets[indexes_complement] >= num_old_classes).sum() == 50000*(100-num_old_classes)/100
+    assert set(targets[indexes_random_old_classes].tolist()) == set(range(config.num_old_classes))
+    assert (targets[indexes_random_old_classes] < config.num_old_classes).sum() == 50000*config.num_old_classes/100*config.prop_train_labels
+    assert (targets[indexes_complement] >= config.num_old_classes).sum() == 50000*(100-config.num_old_classes)/100
+
+    if config.max_train_samples is not None:
+        r = config.max_train_samples / len(data_train_transform)
+        indexes_random_old_classes = _subsample(
+            indexes_random_old_classes,
+            int(r*len(indexes_random_old_classes)),
+            rng
+        )
+        indexes_complement = _subsample(
+            indexes_complement,
+            int(r*len(indexes_complement)),
+            rng
+        )
+
+    indexes_eval = _subsample(indexes_complement, config.max_eval_samples, rng)
 
     train_labelled = Subset(data_train_transform, indexes_random_old_classes)
     train_unlabelled = Subset(data_train_transform, indexes_complement)
-    train_unlabelled_eval = Subset(data_test_transform, indexes_complement)
-    test = CIFAR100(root=path_dataset, train=False, download=download, transform=test_transform)
+    train_unlabelled_eval = Subset(data_test_transform, indexes_eval)
+    test = CIFAR100(root=config.path_dataset, train=False, download=config.download, transform=test_transform)
 
     return {
         'train_labelled':train_labelled,
