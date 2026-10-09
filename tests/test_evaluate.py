@@ -1,4 +1,4 @@
-from config import CONFIG
+from config import load_config
 import numpy as np
 import torch
 from torch.utils.data import Subset, DataLoader
@@ -9,6 +9,7 @@ from models.backbone import build_backbone
 from models.head import Head
 from models.model import Model
 
+CONFIG = load_config()
 device = torch.device("cpu")
 
 def test_perfect():
@@ -19,8 +20,8 @@ def test_perfect():
     np.random.shuffle(perm)
 
     y_pred = perm[y_true]
-    tot, old, new = acc_metrics(y_pred, y_true, is_old)
-    assert np.isclose([tot, old, new], [1, 1, 1]).all()
+    all, old, new = acc_metrics(y_pred, y_true, is_old)
+    assert np.isclose([all, old, new], [1, 1, 1]).all()
 
 def test_perfect_old_only():
     y_true = np.random.randint(100, size=30000)
@@ -29,8 +30,8 @@ def test_perfect_old_only():
     y_pred = y_true.copy()
     y_pred[~is_old] = 0 # wrong cluster
 
-    tot, old, new = acc_metrics(y_pred, y_true, is_old)
-    assert np.isclose([tot, old, new], [0.8, 1, 0], atol=0.065).all()
+    all, old, new = acc_metrics(y_pred, y_true, is_old)
+    assert np.isclose([all, old, new], [0.8, 1, 0], atol=0.065).all()
 
 def test_hardcoded():
     y_pred = np.array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2])
@@ -41,27 +42,21 @@ def test_hardcoded():
     #      [4, 0, 0],
     #      [1, 0, 6]]
 
-    tot, old, new = acc_metrics(y_pred, y_true, is_old)
-    assert np.isclose([tot, old, new], [15/17, 9/10, 6/7]).all()
+    all, old, new = acc_metrics(y_pred, y_true, is_old)
+    assert np.isclose([all, old, new], [15/17, 9/10, 6/7]).all()
 
 def test_random():
     y_pred = np.random.randint(100, size=30000)
     y_true = np.random.randint(100, size=30000)
     is_old = (y_true < 80)
 
-    tot, old, new = acc_metrics(y_pred, y_true, is_old)
+    all, old, new = acc_metrics(y_pred, y_true, is_old)
     
-    assert 0.02 < tot and tot < 0.03 # the tot should land in that range because of the optimal matching 
+    assert 0.02 < all and all < 0.03 # the all should land in that range because of the optimal matching 
 
 def test_evaluate():
     train_transform, test_transform = build_transforms(CONFIG.img_size_encoder, CONFIG.crop_pct)
-    result = get_cifar100_datasets(train_transform, test_transform,
-            CONFIG.path_dataset,
-            num_old_classes=CONFIG.num_old_classes,
-            prop_train_labels=CONFIG.prop_train_labels,
-            n_views=CONFIG.n_views,
-            download=CONFIG.download,
-            seed=CONFIG.seed)
+    result = get_cifar100_datasets(train_transform, test_transform, CONFIG)
 
     subset_eval = Subset(
             result['train_unlabelled_eval'],

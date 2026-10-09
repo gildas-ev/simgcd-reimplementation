@@ -1,9 +1,11 @@
-from config import CONFIG
+from config import load_config
 from models.backbone import build_backbone, unfreeze_vit_from
 from data.cifar import build_transforms, get_cifar100_datasets
 
 import torch
 from torch.utils.data import DataLoader
+
+CONFIG = load_config()
 
 def test_encoder_contract():
     backbone = build_backbone(CONFIG.encoder_name)

@@ -1,10 +1,12 @@
-from config import CONFIG
+from config import load_config
 from losses.classification import teacher_temp, loss_classification
 
 import math
 import numpy as np
 import torch
 import torch.nn.functional as F
+
+CONFIG = load_config()
 
 def test_temp():
     assert teacher_temp(0, CONFIG) == CONFIG.warmup_tau_t

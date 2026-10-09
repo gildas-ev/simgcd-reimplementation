@@ -1,7 +1,9 @@
-from config import CONFIG
+from config import load_config
 from models.head import Head
 
 import torch
+
+CONFIG = load_config()
 
 def test_contract():
     head = Head(CONFIG.out_dim, CONFIG.mlp_dims)

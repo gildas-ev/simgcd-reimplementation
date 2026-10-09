@@ -1,19 +1,15 @@
 import torch
 from torch.utils.data import DataLoader
 
-from config import CONFIG
+from config import load_config
 from data.cifar import build_transforms, get_cifar100_datasets, WrapperCIFAR, build_sampler
+
+CONFIG = load_config()
 
 def test_cifar100():
     train_transform, test_transform = build_transforms(CONFIG.img_size_encoder, CONFIG.crop_pct)
-    result = get_cifar100_datasets(train_transform, test_transform,
-            CONFIG.path_dataset,
-            num_old_classes=CONFIG.num_old_classes,
-            prop_train_labels=CONFIG.prop_train_labels,
-            n_views=CONFIG.n_views,
-            download=CONFIG.download,
-            seed=CONFIG.seed)
-    
+    result = get_cifar100_datasets(train_transform, test_transform, CONFIG)
+
     N = 50000
     assert len(result['train_labelled']) == int(N*CONFIG.num_old_classes/100*CONFIG.prop_train_labels)
     assert len(result['train_unlabelled']) == N-int(N*CONFIG.num_old_classes/100*CONFIG.prop_train_labels)

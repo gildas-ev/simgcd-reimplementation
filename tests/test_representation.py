@@ -1,9 +1,11 @@
-from config import CONFIG
+from config import load_config
 
 import torch
 from losses.representation import contrastive_loss, loss_representation
 import numpy as np
 from math import log, exp
+
+CONFIG = load_config()
 
 def util_sign(result):
     assert result['L_rep_u'].item() >= 0.0
@@ -32,6 +34,16 @@ def test_equal_features():
 
     assert np.isclose(result['L_rep_u'].item(), log(2*B-1))
     assert np.isclose(result['L_rep_s'].item(), log(2*B_l-1))
+    util_sign(result)
+
+def test_no_lab():
+    features = torch.randn(2*CONFIG.batch_size_train, CONFIG.out_dim)
+    labels = torch.randint(0, 100, (CONFIG.batch_size_train, ))
+    is_lab = torch.zeros(CONFIG.batch_size_train).bool()
+
+    result = loss_representation(features, labels, is_lab, CONFIG.tau_u, CONFIG.tau_c)
+
+    assert 'L_rep_s' in result and result['L_rep_s'].dtype == torch.float32
     util_sign(result)
 
 def test_scale():
