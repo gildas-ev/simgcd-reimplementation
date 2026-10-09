@@ -66,6 +66,8 @@ def loss_representation(features, labels, is_lab, tau_u, tau_c):
     mask = not_self & is_same_label
 
     L_rep_s = contrastive_loss(features, mask, tau_c)
+    if B_l == 0:
+        L_rep_s = features.new_zeros(())
 
     return {
         'L_rep_u': L_rep_u,
