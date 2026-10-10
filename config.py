@@ -61,7 +61,6 @@ class Config:
 
     # logs
     path_log: Path = _ROOT / "runs"
-    use_wandb: bool = False
     print_freq: int = 50
     eval_freq: int = 5
 
@@ -92,6 +91,13 @@ PROFILES = {
         "path_log": Path("/kaggle/working/runs"),
         "num_workers": os.cpu_count(),
         "stop_after_epochs": 20,
+        "print_freq": 50,
+        "eval_freq": 5,
+    },
+    "vastai": {
+        "path_dataset": Path("/workspace/datasets"),
+        "path_log": Path("/workspace/runs"),
+        "num_workers": 12,
         "print_freq": 50,
         "eval_freq": 5,
     }

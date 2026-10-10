@@ -145,7 +145,7 @@ if __name__ == "__main__":
         run_dir = Path(CONFIG.path_log / f"{datetime.now():%Y-%m-%d_%H-%M-%S}_{args.profile}")    
         run_dir.mkdir(parents=True)
 
-    logger = Logger(run_dir, CONFIG.use_wandb)
+    logger = Logger(run_dir)
     logger.info(f"Profile:{args.profile}\nCommit:{git['commit']}\nDirty:{git['dirty']}\n" + "\n".join(f"{k}:{v}" for k, v in dataclasses.asdict(CONFIG).items()))
 
     device = torch.device(CONFIG.device)

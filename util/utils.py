@@ -27,7 +27,7 @@ class Averaging(object):
         return self.weighted_sum/self.sum_weights
 
 class Logger:
-    def __init__(self, path_log, use_wandb):
+    def __init__(self, path_log):
         self.path_log = path_log
         self.path_log.mkdir(parents=True, exist_ok=True)
 
