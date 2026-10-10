@@ -11,7 +11,7 @@ import pandas as pd
 
 from config import Config
 
-REFS = {"all": (80.1, 0.9), "old": (81.2, 0.4), "new": (77.8, 2.0)}
+REFS = {"all": (79.8, 0.6), "old": (81.1, 0.5), "new": (77.4, 2.5)}
 COLORS = {"all": "black", "old": "tab:blue", "new": "tab:orange"}
 
 def load_metrics(run_dir):
@@ -78,7 +78,7 @@ def write_summary(ev, it, ep, path):
 | | All | Old | New |
 |---|---|---|---|
 | this run, after {last['epoch']:.0f} epochs | {100 * last['all']:.1f} | {100 * last['old']:.1f} | {100 * last['new']:.1f} |
-| paper (3 runs) | 80.1 ± 0.9 | 81.2 ± 0.4 | 77.8 ± 2.0 |
+| paper (3 runs) | 79.8 ± 0.6 | 81.1 ± 0.5 | 77.4 ± 2.5 |
 
 | | value |
 |---|---|
