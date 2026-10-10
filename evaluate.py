@@ -1,6 +1,9 @@
+import argparse
+
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 import torch
+from torch.utils.data import DataLoader
 
 def acc_metrics(y_pred, y_true, is_old):
     """Giving
@@ -55,3 +58,51 @@ def evaluate(model, loader, num_old, device, amp_dtype, use_amp):
     finally:
         model.train()
     return all, old, new
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--checkpoint", type=str, default=None)
+    args = parser.parse_args()
+    
+    if args.checkpoint:
+        # lazy import
+        from pathlib import Path
+        from data.cifar import build_transforms, get_cifar100_datasets
+        from models.backbone import build_backbone, unfreeze_vit_from
+        from models.head import Head
+        from models.model import Model
+        from config import load_config
+
+        CONFIG = load_config()
+        device = torch.device(CONFIG.device)
+
+        # dataset
+        train_transform, test_transform = build_transforms(CONFIG.img_size_encoder, CONFIG.crop_pct)
+        result = get_cifar100_datasets(train_transform, test_transform, CONFIG)
+
+        # dataloaders
+        eval_dataloader = DataLoader(
+            dataset=result['train_unlabelled_eval'],
+            batch_size=CONFIG.batch_size_eval,
+            drop_last=False,
+            num_workers=CONFIG.num_workers,
+            pin_memory=(device.type == "cuda")
+        )
+
+        # model
+        backbone = build_backbone(CONFIG.encoder_name)
+        unfreeze_vit_from(backbone, CONFIG.unfreeze_from_num)
+        head = Head(CONFIG.out_dim, CONFIG.mlp_dims)
+        model = Model(backbone, head).to(device)
+
+        # checkpoint
+        ckpt = torch.load(Path(args.checkpoint), map_location="cpu", weights_only=False)
+        model.load_state_dict(ckpt["model-trainable"], strict=False)
+        
+        amp_dtype = {"fp32": None, "fp16": torch.float16, "bf16": torch.bfloat16}[CONFIG.precision]
+        use_amp = CONFIG.precision != "fp32"
+
+        # evaluation
+        all, old, new = evaluate(model, eval_dataloader, CONFIG.num_old_classes, device, amp_dtype, use_amp)
+
+        print(f"Evaluation of {args.checkpoint} : all={all:.3f}, old={old:.3f}, new={new:.3f}")
