@@ -62,6 +62,8 @@ def evaluate(model, loader, num_old, device, amp_dtype, use_amp):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=str, default=None)
+    parser.add_argument("--profile", type=str, default="none")
+    parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args()
     
     if args.checkpoint:
@@ -72,9 +74,14 @@ if __name__ == "__main__":
         from models.head import Head
         from models.model import Model
         from config import load_config
+        import dataclasses
 
-        CONFIG = load_config()
+        CONFIG = load_config(args.profile)
+        CONFIG = dataclasses.replace(CONFIG, seed=args.seed)
         device = torch.device(CONFIG.device)
+
+        np.random.seed(CONFIG.seed)
+        torch.manual_seed(CONFIG.seed)
 
         # dataset
         train_transform, test_transform = build_transforms(CONFIG.img_size_encoder, CONFIG.crop_pct)
