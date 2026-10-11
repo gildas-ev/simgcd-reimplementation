@@ -133,6 +133,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--profile", choices=list(PROFILES), default="none")
     parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args()
     
     CONFIG = load_config(args.profile)
@@ -144,6 +145,8 @@ if __name__ == "__main__":
     else:
         run_dir = Path(CONFIG.path_log / f"{datetime.now():%Y-%m-%d_%H-%M-%S}_{args.profile}")    
         run_dir.mkdir(parents=True)
+    if args.seed:
+        CONFIG = dataclasses.replace(CONFIG, seed=args.seed)
 
     logger = Logger(run_dir)
     logger.info(f"Profile:{args.profile}\nCommit:{git['commit']}\nDirty:{git['dirty']}\n" + "\n".join(f"{k}:{v}" for k, v in dataclasses.asdict(CONFIG).items()))
