@@ -1,3 +1,4 @@
+import pytest
 from config import load_config
 from models.backbone import build_backbone, unfreeze_vit_from
 from data.cifar import build_transforms, get_cifar100_datasets
@@ -7,6 +8,7 @@ from torch.utils.data import DataLoader
 
 CONFIG = load_config()
 
+@pytest.mark.slow
 def test_encoder_contract():
     backbone = build_backbone(CONFIG.encoder_name)
     backbone.eval()
@@ -23,6 +25,7 @@ def test_encoder_contract():
     assert y.shape == (4, CONFIG.features_dim)
     assert y.dtype == torch.float32 and torch.isfinite(y).all()
 
+@pytest.mark.slow
 def test_backbone_numel():
     backbone = build_backbone(CONFIG.encoder_name)
     unfreeze_vit_from(backbone, 11) # unfreeze only last block for the test

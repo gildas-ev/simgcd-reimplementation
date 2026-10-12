@@ -1,3 +1,4 @@
+import pytest
 from config import load_config
 from losses.classification import teacher_temp, loss_classification
 

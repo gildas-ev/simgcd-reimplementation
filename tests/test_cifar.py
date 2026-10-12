@@ -1,3 +1,4 @@
+import pytest
 import torch
 from torch.utils.data import DataLoader
 
@@ -6,6 +7,7 @@ from data.cifar import build_transforms, get_cifar100_datasets, WrapperCIFAR, bu
 
 CONFIG = load_config()
 
+@pytest.mark.slow
 def test_cifar100():
     train_transform, test_transform = build_transforms(CONFIG.img_size_encoder, CONFIG.crop_pct)
     result = get_cifar100_datasets(train_transform, test_transform, CONFIG)

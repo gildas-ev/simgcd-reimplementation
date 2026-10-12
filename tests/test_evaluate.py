@@ -1,3 +1,4 @@
+import pytest
 from config import load_config
 import numpy as np
 import torch
@@ -54,6 +55,7 @@ def test_random():
     
     assert 0.02 < all and all < 0.03 # the all should land in that range because of the optimal matching 
 
+@pytest.mark.slow
 def test_evaluate():
     train_transform, test_transform = build_transforms(CONFIG.img_size_encoder, CONFIG.crop_pct)
     result = get_cifar100_datasets(train_transform, test_transform, CONFIG)

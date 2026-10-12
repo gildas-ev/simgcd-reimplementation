@@ -1,3 +1,4 @@
+import pytest
 from config import load_config
 
 import torch
