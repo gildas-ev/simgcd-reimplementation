@@ -90,7 +90,7 @@ def write_summary(ev, it, ep, path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("run_dir", type=Path)
+    parser.add_argument("--run_dir", type=Path)
     run_dir = parser.parse_args().run_dir
 
     out = run_dir / "plots"
