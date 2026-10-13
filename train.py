@@ -137,16 +137,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     CONFIG = load_config(args.profile)
-    git = git_info()
-    np.random.seed(CONFIG.seed)
-    torch.manual_seed(CONFIG.seed)
     if args.resume:
         run_dir = Path(CONFIG.path_log / args.resume)
     else:
         run_dir = Path(CONFIG.path_log / f"{datetime.now():%Y-%m-%d_%H-%M-%S}_{args.profile}")    
         run_dir.mkdir(parents=True)
-    if args.seed:
+    if args.seed is not None:
         CONFIG = dataclasses.replace(CONFIG, seed=args.seed)
+    git = git_info()
+    np.random.seed(CONFIG.seed)
+    torch.manual_seed(CONFIG.seed)
 
     logger = Logger(run_dir)
     logger.info(f"Profile:{args.profile}\nCommit:{git['commit']}\nDirty:{git['dirty']}\n" + "\n".join(f"{k}:{v}" for k, v in dataclasses.asdict(CONFIG).items()))

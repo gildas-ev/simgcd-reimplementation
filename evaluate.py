@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=str, default=None)
     parser.add_argument("--profile", type=str, default="none")
-    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--seed", type=int, required=True)
     args = parser.parse_args()
     
     if args.checkpoint:
