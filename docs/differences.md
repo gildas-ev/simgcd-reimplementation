@@ -23,6 +23,17 @@ which doesn't affect gradient descent. I followed the definition of entropy of m
 As a result, my total loss is shifted by a constant compared to the official one
 (see the loss curve in the [README](../README.md#results)).
 
+## Protocol
+
+#### The seed also draws the split
+
+In the official code, `get_cifar_100_datasets` draws the labelled/unlabelled split with a fixed
+seed (`seed=0`), and `get_datasets` never overrides it: all official runs share the same split,
+and only the training randomness changes. In my code, `config.seed` drives both the split and
+training. The 5 seeds in the README therefore use 5 different splits, and the reported std
+includes the variance of the split on top of the variance of training. This may explain part of the gap on New classes std
+(3.4 against 2.5). Running the 5 seeds on the official split was not tested.
+
 ## Design choices
 
 - **Prototypes.** Instead of reparametrizing the prototype weight matrix with the deprecated

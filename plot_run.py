@@ -30,7 +30,7 @@ def plot_accuracy(ev, cfg, path):
         ax.axhline(ref, ls="--", lw=1, color=COLORS[k])
     ax.axvline(cfg.warmup_epochs, color="grey", ls=":", label="end of τ_t warmup")
     ax.set_ylabel("accuracy (%)")
-    ax.legend(title="dashed = paper")
+    ax.legend(title="dashed = official GitHub")
 
     ax_norm.plot(ev["epoch"], ev["proto_norm"], marker="o", ms=3, color="tab:green")
     ax_norm.axvline(cfg.warmup_epochs, color="grey", ls=":")
@@ -78,7 +78,8 @@ def write_summary(ev, it, ep, path):
 | | All | Old | New |
 |---|---|---|---|
 | this run, after {last['epoch']:.0f} epochs | {100 * last['all']:.1f} | {100 * last['old']:.1f} | {100 * last['new']:.1f} |
-| paper (3 runs) | 79.8 ± 0.6 | 81.1 ± 0.5 | 77.4 ± 2.5 |
+| official GitHub (5 runs) | 79.8 ± 0.6 | 81.1 ± 0.5 | 77.4 ± 2.5 |
+| paper (3 runs) | 80.1 ± 0.9 | 81.2 ± 0.4 | 77.8 ± 2.0 |
 
 | | value |
 |---|---|

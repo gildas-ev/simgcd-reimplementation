@@ -3,8 +3,8 @@
 ![tests](https://github.com/gildas-ev/simgcd-reimplementation/actions/workflows/tests.yml/badge.svg)
 
 I reimplemented **SimGCD** ([Wen et al., ICCV 2023](https://arxiv.org/abs/2211.11727)), a method for
-Generalized Category Discovery, from scratch in PyTorch. Over 5 seeds, it matches the paper's
-CIFAR-100 results within the reported standard deviations. The [code walkthrough](docs/walkthrough.md)
+Generalized Category Discovery, from scratch in PyTorch. Over 5 seeds, it matches the CIFAR-100
+results of the official code (5 runs) within one standard deviation. The [code walkthrough](docs/walkthrough.md)
 documents every component with its tensor shapes, and can be read alongside the paper.
 
 ## Results
@@ -25,11 +25,14 @@ Over 5 seeds, All and Old match the official results within 0.1 pt, and New with
 Std is the sample std over the 5 seeds (`ddof=1`). The variance is concentrated on New classes,
 which are discovered without labels.
 
+Protocol difference: in my runs, the seed also draws the labelled/unlabelled split, while the
+official code uses the same split (seed 0) for every run. [Details](docs/differences.md#the-seed-also-draws-the-split)
+
 ![Accuracy and mean prototype norm, seed 7](assets/accuracy_seed7.png)
 
 ![Entropy of the mean prediction and total loss, seed 7](assets/losses_seed7.png)
 
-*Seed 7. Dashed lines are the paper's results. New accuracy keeps improving long after the end of
+*Seed 7. Dashed lines are the official GitHub results (mean over 5 runs). New accuracy keeps improving long after the end of
 the teacher temperature warmup (dotted line).*
 
 ## Implementation highlights
