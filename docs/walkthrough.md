@@ -143,7 +143,7 @@ The two losses only differ by their positive set $P(i)$:
 
 ## 7. Evaluation
 
-`evaluate(model, loader, num_old, device)` returns the All, Old and New accuracies.
+`evaluate(model, loader, num_old, device, amp_dtype, use_amp)` returns the All, Old and New accuracies.
 As in the paper, I report the accuracies after the last training epoch, computed in one pass over
 the whole `train_unlabelled_eval` set.
 

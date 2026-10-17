@@ -2,3 +2,6 @@ numpy>=1.25.0
 scipy>=1.14.1
 pandas>=1.5
 matplotlib>=3.6
+torch>=2.3
+torchvision>=0.18
+pytest>=8

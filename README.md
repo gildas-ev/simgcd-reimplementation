@@ -3,7 +3,7 @@
 ![tests](https://github.com/gildas-ev/simgcd-reimplementation/actions/workflows/tests.yml/badge.svg)
 
 I reimplemented **SimGCD** ([Wen et al., ICCV 2023](https://arxiv.org/abs/2211.11727)), a method for
-Generalized Category Discovery, from scratch in PyTorch. Over 3 seeds, it matches the paper's
+Generalized Category Discovery, from scratch in PyTorch. Over 5 seeds, it matches the paper's
 CIFAR-100 results within the reported standard deviations. The [code walkthrough](docs/walkthrough.md)
 documents every component with its tensor shapes, and can be read alongside the paper.
 
@@ -13,27 +13,30 @@ CIFAR-100, 80 old / 20 new classes, accuracy (%) on the unlabelled train set aft
 
 |                     | All            | Old            | New            |
 |---------------------|----------------|----------------|----------------|
+| Seed 7              | 80.17          | 81.05          | 78.41          |
+| Seed 13             | 80.05          | 81.17          | 77.81          |
+| Seed 35             | 81.22          | 81.46          | 80.74          |
 | Seed 42             | 79.14          | 81.03          | 75.35          |
-| Seed 56             | 79.32          | 80.34          | 77.29          |
-| Seed 7              | 79.52          | 81.53          | 75.49          |
-| **Mean ± std**      | **79.3 ± 0.2** | **81.0 ± 0.6** | **76.0 ± 1.1** |
-| [Official](https://github.com/CVMI-Lab/SimGCD) | 79.8 ± 0.6 | 81.1 ± 0.5 | 77.4 ± 2.5 |
+| Seed 56             | 78.10          | 81.16          | 71.97          |
+| **Mean ± std**      | **79.7 ± 1.2** | **81.2 ± 0.2** | **76.9 ± 3.3** |
+| [Official](https://github.com/CVMI-Lab/SimGCD) (5 runs) | 79.8 ± 0.6 | 81.1 ± 0.5 | 77.4 ± 2.5 |
 
-All and Old fall within the official intervals. New is 1.4 pt lower, still within the official
-standard deviation. Std is the sample std over the 3 seeds (`ddof=1`).
+Over 5 seeds, All and Old match the official results within 0.1 pt, and New within 0.5 pt.
+Std is the sample std over the 5 seeds (`ddof=1`). The variance is concentrated on New classes,
+which are discovered without labels.
 
-![Accuracy and mean prototype norm, seed 42](assets/accuracy_seed42.png)
+![Accuracy and mean prototype norm, seed 7](assets/accuracy_seed7.png)
 
-![Entropy of the mean prediction and total loss, seed 42](assets/losses_seed42.png)
+![Entropy of the mean prediction and total loss, seed 7](assets/losses_seed7.png)
 
-*Seed 42. Dashed lines are the paper's results. New accuracy keeps improving long after the end of
+*Seed 7. Dashed lines are the paper's results. New accuracy keeps improving long after the end of
 the teacher temperature warmup (dotted line).*
 
 ## Implementation highlights
 
 - **The official `ColorJitter()` is a no-op.** It is called without arguments, and all torchvision
   defaults are 0, so no color augmentation is applied on CIFAR-100. I kept it to match the reported
-  results. [Details](docs/differences.md#colorjitter-is-a-no-op)
+  results. [Details](docs/differences.md#colorjitter-is-not-used)
 - The paper and the code disagree on the contrastive temperatures: the paper gives τ_u = 0.07 and
   τ_c = 1.0, the code swaps them. I follow the code.
   [Details](docs/differences.md#temperature-mismatch-between-paper-and-code)
@@ -66,7 +69,7 @@ evaluate.py           accuracy on All / Old / New
 plot_run.py           plots from a run directory
 tests/                pytest suite, one file per component
 docs/                 code walkthrough and differences with the official code
-results/              per-seed metrics and configs (seed42, seed56, seed7)
+results/              per-seed metrics and configs
 assets/               figures used in this README
 ```
 
@@ -97,18 +100,19 @@ python plot_run.py --run_dir runs/<run_dir>                                     
 Tests:
 
 ```bash
-pytest -m "not slow"   # fast suite, as run by the CI (~1 min)
+pytest -m "not slow"   # fast suite, as run by the CI
 pytest                 # full suite, the 4 slow tests download CIFAR-100 and the DINO weights
 ```
 
 ## Pretrained checkpoints
 
-One checkpoint per seed (`seed42.pt`, `seed56.pt`, `seed7.pt`) is available in
-[Release v1.0](https://github.com/gildas-ev/simgcd-reimplementation/releases/tag/v1.0).
+One checkpoint per seed is available in
+[Release v1.1](https://github.com/gildas-ev/simgcd-reimplementation/releases/tag/v1.1).
 
 ```bash
-gh release download v1.0 -p "seed42.pt" -D checkpoints/
-python evaluate.py --checkpoint checkpoints/seed42.pt --profile <your_profile> --seed 42
+mkdir -p checkpoints
+curl -L -o checkpoints/seed7.pt https://github.com/gildas-ev/simgcd-reimplementation/releases/download/v1.1/seed7.pt
+python evaluate.py --checkpoint checkpoints/seed7.pt --profile <your_profile> --seed 7
 ```
 
 Per-seed metrics and configs are in [`results/`](results/).
@@ -116,7 +120,7 @@ Per-seed metrics and configs are in [`results/`](results/).
 ## Compute and cost
 
 I debugged on Kaggle (T4) and ran the final trainings on vast.ai with an RTX 3090.
-A 200-epoch run takes about 8 hours and costs around €2.15. The three seeds cost €6.42 in total.
+A 200-epoch run takes about 8 hours and costs around €2.15.
 
 ## Limitations
 
@@ -136,3 +140,7 @@ Based on the paper and the [official implementation](https://github.com/CVMI-Lab
     pages     = {16590-16600}
 }
 ```
+
+## License
+
+MIT, see [LICENSE](LICENSE).
