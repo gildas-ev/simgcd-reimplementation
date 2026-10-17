@@ -17,11 +17,11 @@ CIFAR-100, 80 old / 20 new classes, accuracy (%) on the unlabelled train set aft
 | Seed 13             | 80.05          | 81.17          | 77.81          |
 | Seed 35             | 81.22          | 81.46          | 80.74          |
 | Seed 42             | 79.14          | 81.03          | 75.35          |
-| Seed 56             | 78.10          | 81.16          | 71.97          |
-| **Mean ± std**      | **79.7 ± 1.2** | **81.2 ± 0.2** | **76.9 ± 3.3** |
-| [Official](https://github.com/CVMI-Lab/SimGCD) (5 runs) | 79.8 ± 0.6 | 81.1 ± 0.5 | 77.4 ± 2.5 |
+| Seed 56             | 78.09          | 81.20          | 71.88          |
+| **Mean ± std**      | **79.7 ± 1.2** | **81.2 ± 0.2** | **76.8 ± 3.4** |
+| [Official GitHub](https://github.com/CVMI-Lab/SimGCD) (5 runs) | 79.8 ± 0.6 | 81.1 ± 0.5 | 77.4 ± 2.5 |
 
-Over 5 seeds, All and Old match the official results within 0.1 pt, and New within 0.5 pt.
+Over 5 seeds, All and Old match the official results within 0.1 pt, and New within 0.6 pt.
 Std is the sample std over the 5 seeds (`ddof=1`). The variance is concentrated on New classes,
 which are discovered without labels.
 
