@@ -5,7 +5,8 @@
 I reimplemented **SimGCD** ([Wen et al., ICCV 2023](https://arxiv.org/abs/2211.11727)), a method for
 Generalized Category Discovery, from scratch in PyTorch. Over 5 seeds, it matches the CIFAR-100
 results of the official code (5 runs) within one standard deviation. The [code walkthrough](docs/walkthrough.md)
-documents every component with its tensor shapes, and can be read alongside the paper.
+documents every component with its tensor shapes, and can be read alongside the paper. I also conducted
+an oral [presentation](docs/beamer_simgcd.pdf) about GCD at Forvis Mazars.
 
 ## Results
 
